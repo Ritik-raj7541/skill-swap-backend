@@ -5,7 +5,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../../models/user");
 
 // 1. POST
-// /api/auth/user/register
+// /api/auth/user/register 
 
 const register = asyncHandler(async (req, res) => {
   const { email, name, password } = req.body;

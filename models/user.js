@@ -13,10 +13,13 @@ const userSchema = mongoose.Schema({
             type: String,
             required: true,
       },
+      bio: {
+            type: String,
+      },
       phoneNumber: {
             type: String,
       },
-      skillServer: {
+      skillServes: {
             type: [],
       },
       skillNeed: {

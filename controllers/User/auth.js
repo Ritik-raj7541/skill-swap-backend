@@ -53,7 +53,7 @@ const login = asyncHandler(async (req, res) => {
       process.env.SECRET_ACCESS_TOKEN,
       { expiresIn: "1m" }
     );
-    res.status(200).json({ token: accessToken, email: email, name: user.name });
+    res.status(200).json({ token: accessToken, email: email, name: user.name, id: user.id });
   } else {
     res.status(401);
     throw new Error("User is not valid");

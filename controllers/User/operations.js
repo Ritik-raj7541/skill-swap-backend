@@ -75,4 +75,39 @@ const skillAdd = asyncHandler(async (req, res) => {
 // API- http://localhost:5000/api/operations/user/skill-update/remove-skill/:type/:id
 // type- needed or serves
 
-module.exports = { profile, skillAdd };
+const skillDeletion = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  const type = req.params.type;
+  const { skills } = req.body;
+  const user = await User.findById(id);
+  if (!user) {
+    res.status(401);
+    throw new Error("Not a valid user!!");
+  }
+  if (type === "needed") {
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $pullAll: { skillNeed: skills } },
+      { new: true }
+    );
+    if (!updatedUser) {
+      res.status(401);
+      throw new Error("Skill not updated!!");
+    }
+    res.status(200).json(updatedUser);
+  } else {
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $pullAll: {skillServes: skills  } },
+      { new: true }
+    );
+    if (!updatedUser) {
+      res.status(401);
+      throw new Error("Skill not updated!!");
+    }
+    res.status(200).json(updatedUser);
+  }
+});
+
+
+module.exports = { profile, skillAdd, skillDeletion};

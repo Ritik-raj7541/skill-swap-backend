@@ -1,5 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../../models/user");
+// const Skills = require("../../models/skills");
+const {skillUpdator} = require('../../middleware/skillHandler') ;
 
 // 1. profile completion
 // METHOD- POST
@@ -17,6 +19,10 @@ const profile = asyncHandler(async (req, res) => {
     res.status(401);
     throw new Error("Not authorized!!");
   }
+
+  const skillUpdateNeed = skillUpdator(skillNeed, "need", id) ;
+  const skillUpdateServe = skillUpdator(skillServes, "serve", id) ;
+
   const update = {
     phoneNumber,
     bio,
@@ -98,7 +104,7 @@ const skillDeletion = asyncHandler(async (req, res) => {
   } else {
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { $pullAll: {skillServes: skills  } },
+      { $pullAll: { skillServes: skills } },
       { new: true }
     );
     if (!updatedUser) {
@@ -109,5 +115,4 @@ const skillDeletion = asyncHandler(async (req, res) => {
   }
 });
 
-
-module.exports = { profile, skillAdd, skillDeletion};
+module.exports = { profile, skillAdd, skillDeletion };

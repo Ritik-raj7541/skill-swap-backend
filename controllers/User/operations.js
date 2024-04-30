@@ -9,19 +9,27 @@ const {skillUpdator} = require('../../middleware/skillHandler') ;
 
 const profile = asyncHandler(async (req, res) => {
   const { phoneNumber, bio, skillServes, skillNeed } = req.body;
-  if (!phoneNumber) {
-    res.status(400);
-    throw new Error("Phone Number is mandatory mandatory!");
-  }
+  // if (!phoneNumber) {
+  //   res.status(400);
+  //   throw new Error("Phone Number is mandatory mandatory!");
+  // }
   const id = req.params.id;
   const existUser = await User.findById(id);
   if (!existUser) {
     res.status(401);
     throw new Error("Not authorized!!");
   }
-
-  const skillUpdateNeed = skillUpdator(skillNeed, "need", id) ;
-  const skillUpdateServe = skillUpdator(skillServes, "serve", id) ;
+  if(existUser.phoneNumber === null){
+    res.status(400);
+    throw new Error("Phone Number is mandatory mandatory!");
+  }
+  if(skillNeed != null){
+    const skillUpdateNeed = skillUpdator(skillNeed, "need", id) ;
+  }
+  if(skillServes != null){
+    const skillUpdateServe = skillUpdator(skillServes, "serve", id) ;
+  }
+  
 
   const update = {
     phoneNumber,

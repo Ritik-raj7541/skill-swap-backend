@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../../models/user");
 // const Skills = require("../../models/skills");
 const {skillUpdator} = require('../../middleware/skillHandler') ;
+const findEdge = require("../../graphImplementaion/findEdge");
 
 // 1. profile completion
 // METHOD- POST
@@ -30,7 +31,6 @@ const profile = asyncHandler(async (req, res) => {
     const skillUpdateServe = skillUpdator(skillServes, "serve", id) ;
   }
   
-
   const update = {
     phoneNumber,
     bio,
@@ -42,6 +42,13 @@ const profile = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Not Udpated!");
   }
+  //graph maker
+  const addedEdge = await findEdge(updatedUser) ;
+  if(!addedEdge){
+    res.status(400) ;
+    throw new Error("Not added new edge!!") ;
+  }
+
   res.status(200).json(updatedUser);
 });
 
@@ -119,6 +126,7 @@ const skillDeletion = asyncHandler(async (req, res) => {
       res.status(401);
       throw new Error("Skill not updated!!");
     }
+    const addEdge = require("../../graphImplementaion/findEdge");
     res.status(200).json(updatedUser);
   }
 });

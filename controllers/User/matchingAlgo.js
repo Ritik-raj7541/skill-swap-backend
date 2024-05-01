@@ -2,9 +2,10 @@ const asyncHandler = require('express-async-handler') ;
 const User = require('../../models/user') ;
 const Skills = require('../../models/skills') ;
 const skillFilter = require('../../middleware/skillFilter');
+const dfsWhichGivesCycle = require('../../graphImplementaion/dfs');
 
 // 1. profile completion
-// METHOD- POST
+// METHOD- GET
 // API- http://localhost:5000/api/matchingAlgo/user/match/:id
 
 const matching = asyncHandler( async(req, res)=>{
@@ -64,5 +65,13 @@ const matching = asyncHandler( async(req, res)=>{
       // const bestStudent = 
       res.status(200).json({"best": bestUser,"alternate": alternateUsers}) ;
 }) ;
+// 2. profile completion
+// METHOD- GET
+// API- http://localhost:5000/api/MatchingAlgo/user/match/graph/:id
+const graphMatchingAlgo = asyncHandler( async(req, res) =>{
+      const id = req.params.id ;
+      const allCycle = await dfsWhichGivesCycle(id) ;
+      res.status(200).json(allCycle) ;
+})
 
-module.exports = {matching} ;
+module.exports = {matching, graphMatchingAlgo} ;

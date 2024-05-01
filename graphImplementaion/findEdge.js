@@ -1,6 +1,5 @@
 const asyncHandler = require('express-async-handler') ;
 const Skill = require('../models/skills') ;
-const Graph = require('../models/graph') ;
 const addEdge = require('./edgeAdd');
 
 const findEdge = asyncHandler( async(user) =>{
@@ -12,12 +11,12 @@ const findEdge = asyncHandler( async(user) =>{
       for(let i=0;i<skillNeed.length; ++i){
             const skill = skillNeed[i].skill ;
             const level = skillNeed[i].level ;
-            const matchedSkill = await Skill.find({'skill.name': skill}) ;
-            const skilledUser = matchedSkill.levels ;
+            const matchedSkill = await Skill.findOne({'skill.name': skill}) ;
+            const skilledUser = matchedSkill.skill.levels ;
             for(let j=0;j<skilledUser.length; ++j){
-                  const userLevel = skilledUser[i].level ;
-                  const userId = skilledUser[i].id ;
-                  const userSkillType = skilledUser[i].skillType ;
+                  const userLevel = skilledUser[j].level ;
+                  const userId = skilledUser[j].id ;
+                  const userSkillType = skilledUser[j].skillType ;
                   if(userSkillType === 'serve' && userLevel > level){
                         // teacherId: userId, studentId: id, skill
                         const newEdge = await addEdge(userId, id, skill) ;
@@ -31,12 +30,12 @@ const findEdge = asyncHandler( async(user) =>{
       for(let i=0;i<skillServes.length; ++i){
             const skill = skillServes[i].skill ;
             const level = skillServes[i].level ;
-            const matchedSkill = await Skill.find({'skill.name': skill}) ;
-            const skilledUser = matchedSkill.levels ;
+            const matchedSkill = await Skill.findOne({'skill.name': skill}) ;
+            const skilledUser = matchedSkill.skill.levels ;
             for(let j=0;j<skilledUser.length; ++j){
-                  const userLevel = skilledUser[i].level ;
-                  const userId = skilledUser[i].id ;
-                  const userSkillType = skilledUser[i].skillType ;
+                  const userLevel = skilledUser[j].level ;
+                  const userId = skilledUser[j].id ;
+                  const userSkillType = skilledUser[j].skillType ;
                   if(userSkillType === 'need' && userLevel < level){
                         // teacherId: id, studentId: userId, skill
                         const newEdge = await addEdge(id, userId, skill) ;
@@ -46,6 +45,7 @@ const findEdge = asyncHandler( async(user) =>{
                   }
             }
       }
+      return true ;
 }) ;
 
 module.exports = findEdge ;

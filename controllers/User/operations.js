@@ -25,10 +25,10 @@ const profile = asyncHandler(async (req, res) => {
     throw new Error("Phone Number is mandatory mandatory!");
   }
   if(skillNeed != null){
-    const skillUpdateNeed = skillUpdator(skillNeed, "need", id) ;
+    const skillUpdateNeed = await skillUpdator(skillNeed, "need", id) ;
   }
   if(skillServes != null){
-    const skillUpdateServe = skillUpdator(skillServes, "serve", id) ;
+    const skillUpdateServe = await skillUpdator(skillServes, "serve", id) ;
   }
   
   const update = {

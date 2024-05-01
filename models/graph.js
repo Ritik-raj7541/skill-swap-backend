@@ -1,8 +1,18 @@
 const mongoose = require('mongoose') ;
 
 const graphSchema = mongoose.Schema({
-      teacher: String,
-      student: String,
-      skill: String,
-      linkTime: Date,
+      teacher: {
+            type: String,
+      },
+      student: {
+            type: String,
+      },
+      skill: {
+            type:String,
+      },
+      linkTime: {
+            type: Date,
+      }
 }) ;
+
+module.exports = mongoose.model("graphSchema", graphSchema) ;

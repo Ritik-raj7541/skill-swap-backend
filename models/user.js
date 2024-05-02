@@ -24,6 +24,13 @@ const userSchema = mongoose.Schema({
       },
       skillNeed: {
             type: [],
+      },
+      groups: {
+            type:[
+                  {
+                        id: String,
+                  }
+            ],
       }
 }) ;
 module.exports = mongoose.model("UserSchema", userSchema) ;

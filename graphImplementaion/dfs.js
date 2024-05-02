@@ -19,7 +19,7 @@ const dfsWhichGivesCycle = asyncHandler( async(id)=>{
                       }
                   tempPair.push(newPair) ;
                   tempPair = tempPair.slice(1) ;
-                  cycledPair.push(...tempPair) ;
+                  cycledPair.push([...tempPair]) ;
                   // console.log(cycledPair);
                   return true;
             }
@@ -51,7 +51,7 @@ const dfsWhichGivesCycle = asyncHandler( async(id)=>{
             tempPair.pop() ;
       }
       const result = await dfs(id, "ritik", "dontnow", "time") ;
-      console.log(result);
+      // console.log(result);
       if(result === undefined){
             // console.log(cycledPair);
             return cycledPair

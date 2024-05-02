@@ -1,10 +1,12 @@
 const asyncHandler = require('express-async-handler') ;
 const User = require('../../models/user') ;
 const Skills = require('../../models/skills') ;
+const Group = require('../../models/studyGroup') ;
 const skillFilter = require('../../middleware/skillFilter');
 const dfsWhichGivesCycle = require('../../graphImplementaion/dfs');
 
-// 1. profile completion
+
+// 1. matching Algo 1-v-1
 // METHOD- GET
 // API- http://localhost:5000/api/matchingAlgo/user/match/:id
 
@@ -71,7 +73,74 @@ const matching = asyncHandler( async(req, res)=>{
 const graphMatchingAlgo = asyncHandler( async(req, res) =>{
       const id = req.params.id ;
       const allCycle = await dfsWhichGivesCycle(id) ;
-      res.status(200).json(allCycle) ;
-})
+      const result = [] ;
+      for(let i=0;i<allCycle.length; ++i){
+            const group = allCycle[i] ;
+            // let uniqueId = "" ;
+            let ids = [] ;
+            
+            for(let j=0;j<group.length; ++j){
+                  // uniqueId += group[j].teacher ;
+                  ids.push({id: group[j].teacher, linkedId: group[j].student}) ;
+            }
+            
+            const newGroup = await Group.create({
+                  // uniqueId: uniqueId,
+                  allIds: ids
+            }) ;
+            result.push({id: newGroup.id, group}) ;
+      }
+      res.status(200).json(result) ;
+}) ;
 
-module.exports = {matching, graphMatchingAlgo} ;
+
+// 3. conformation check with backtracking
+// METHOD- GET
+// API- http://localhost:5000/api/matchingAlgo/user/confirmation/:groupId/:id
+
+const confirmation = asyncHandler( async(req, res) =>{
+      const userId = req.params.id ;
+      const groupId = req.params.groupId ;
+      const user = await User.findOne({_id: userId, "groups.id": groupId}) ;
+      
+      //NEED TO BE UNCOMMENT AFTER THE DATABASE CHANGE ONCE AGAIN
+      // if(!user){
+      //       const updatedUser = await User.findOneAndUpdate(
+      //             {_id: userId}, 
+      //             {$push: {groups: groupId}}, 
+      //             {new: true}
+      //       ) ;
+      //       if(!updatedUser){
+      //             res.status(400) ;
+      //             throw new Error ;
+      //       }
+      // }
+      const group = await Group.findOneAndUpdate(
+            { _id: groupId, "allIds.id": userId },
+            { $set: { "allIds.$.confirmation": true } },
+            { new: true }
+      );
+      if(!group){
+            res.status(400) ;
+            throw new Error("updation not done wrong") ;
+      }
+      //check for all
+      let flag = true ;
+      for(let i=0;i<group.allIds.length; ++i){
+            flag = flag & group.allIds[i].confirmation ;
+      }
+      if(!flag){
+            res.status(208).json({message: "not confirmed by all!!"}) ;
+      }
+      console.log(flag);
+      //confirmed by all
+      //next step -> skill and edges deletion
+      //Task1: delete the edges using group
+
+      //Task2: delete user under skills sections
+
+      res.status(200).json({message: "good work doing my friend"}) ;
+
+}) ;
+
+module.exports = {matching, graphMatchingAlgo, confirmation} ;

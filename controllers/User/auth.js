@@ -8,8 +8,8 @@ const User = require("../../models/user");
 // /api/auth/user/register 
 
 const register = asyncHandler(async (req, res) => {
-  const { email, name, password } = req.body;
-  if (!email || !name || !password) {
+  const { email, firstname, lastname, password } = req.body;
+  if (!email || !firstname || !password) {
     res.status(400);
     throw new Error("All fields are mandatory!");
   }
@@ -19,7 +19,7 @@ const register = asyncHandler(async (req, res) => {
     throw new Error("User with same details already exist!");
   }
   const hashPassword = await bcrypt.hash(password, 10);
-
+  const name = firstname + " " + lastname ;
   const newUser = await User.create({
     email,
     name,

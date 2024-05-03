@@ -11,7 +11,6 @@ const skillFilter = asyncHandler(async(skillServe, skillServeLevel, skillNeed, s
       let l = 0, h = skillLearn.length-1 ;
       while(h-l > 1){
             let mid = l + Math.trunc((h-l)/2) ;
-            console.log(mid);
             if(skillLearn[mid].level < skillServeLevel){
                   l = mid ;
             }

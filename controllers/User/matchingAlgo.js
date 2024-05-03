@@ -45,27 +45,54 @@ const matching = asyncHandler( async(req, res)=>{
       // console.log(skillNeedArray);
       let maxLevel = -1 ;
       let bestUser = {} ;
-      let alternateUsers = [] ;
+      let alternateUsers = {} ;
+      let ids = [] ;
+      let result = [] ;
       for(let i=0;i<user.skillServes.length;++i){
             const skillServe = user.skillServes[i].skill ;
             const skillServeLevel = user.skillServes[i].level ;
             const tempUser = await skillFilter(skillServe, skillServeLevel, skillNeed, skillNeedLevel, id) ;
-            console.log(tempUser);
+            // console.log(tempUser);
             if(tempUser.length > 0 && maxLevel < tempUser[0].level){
                   maxLevel = tempUser[0].level ;
-                  if(bestUser != null){
-                        alternateUsers.push(...bestUser) ;
+                  // if(bestUser != null){
+                  //       alternateUsers.push(...bestUser) ;
+                  // }
+                  const updatedTempUser = {
+                        id: id,
+                        linkedId: tempUser[0].id
                   }
-                  bestUser = tempUser[0] ;
+                  alternateUsers = {
+                        id: tempUser[0].id,
+                        linkedId: id
+                  }
+                  bestUser = updatedTempUser ;
             }
-            if(tempUser.length > 0){
-                  alternateUsers.push(...tempUser.slice(1)) ;
-            }
+            // if(tempUser.length > 0){
+            //       alternateUsers.push(...tempUser.slice(1)) ;
+            // }
       }
       // const bestFit = 
       // const bestEducator = 
       // const bestStudent = 
-      res.status(200).json({"best": bestUser,"alternate": alternateUsers}) ;
+      ids.push(bestUser) ;
+      ids.push(alternateUsers) ;
+      // console.log(ids);
+      const existGroup = await Group.findOne({'allIds': {$all:ids.map(obj => ({ $elemMatch: obj }))}}) ;
+      // console.log(ids);
+      // console.log(existGroup);
+      if(!existGroup){
+            const newGroup = await Group.create({
+                  allIds: ids,
+            }) ;
+            result.push({id: newGroup.id, group: ids}) ;
+            // res.status(200).json(result) ;
+      }
+      else{
+            result.push({id: existGroup.id, group: ids}) ; 
+      }
+      
+      res.status(200).json(result) ;
 }) ;
 // 2. profile completion
 // METHOD- GET
@@ -83,12 +110,19 @@ const graphMatchingAlgo = asyncHandler( async(req, res) =>{
                   // uniqueId += group[j].teacher ;
                   ids.push({id: group[j].teacher, linkedId: group[j].student}) ;
             }
-            
-            const newGroup = await Group.create({
-                  // uniqueId: uniqueId,
-                  allIds: ids
-            }) ;
-            result.push({id: newGroup.id, group}) ;
+            //CHANGE DONE
+            const existGroup = await Group.findOne({'allIds': {$all:ids.map(obj => ({ $elemMatch: obj }))}}) ;
+            if(!existGroup){
+                  const newGroup = await Group.create({
+                        // uniqueId: uniqueId,
+                        allIds: ids
+                  }) ;
+                  result.push({id: newGroup.id, group}) ;
+            }
+            else{
+
+            }
+            result.push({id: existGroup.id, group}) ;
       }
       res.status(200).json(result) ;
 }) ;

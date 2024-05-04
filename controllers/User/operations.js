@@ -30,12 +30,13 @@ const profile = asyncHandler(async (req, res) => {
   if(skillServes != null){
     const skillUpdateServe = await skillUpdator(skillServes, "serve", id) ;
   }
-  
+  const currentDate = new Date().toLocaleString("en-Us", {timeZone: 'Asia/Kolkata'});
   const update = {
     phoneNumber,
     bio,
     skillServes,
     skillNeed,
+    time: currentDate,
   };
   const updatedUser = await User.findByIdAndUpdate(id, update, { new: true });
   if (!updatedUser) {

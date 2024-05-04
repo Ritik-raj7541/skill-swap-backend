@@ -161,45 +161,60 @@ const confirmation = asyncHandler( async(req, res) =>{
             throw new Error("updation not done wrong") ;
       }
       //check for all
-      let flag = true ;
-      let result = [] ;
-      for(let i=0;i<group.allIds.length; ++i){
-            const fl = group.allIds[i].confirmation ;
-            flag = flag & fl ;
-            const id = group.allIds[i].id ;
-            const user = await User.findById(id) ;
-            if(user){
-                  result.push({name: user.name, checked: fl}) ;
-            }
+      // let flag = true ;
+      // let result = [] ;
+      // for(let i=0;i<group.allIds.length; ++i){
+      //       const fl = group.allIds[i].confirmation ;
+      //       flag = flag & fl ;
+      //       const id = group.allIds[i].id ;
+      //       const user = await User.findById(id) ;
+      //       if(user){
+      //             result.push({name: user.name, checked: fl}) ;
+      //       }
 
-      }
-      if(!flag){
-            res.status(200).json({done: false, result: result, groupId:group.id}) ;
-      }
+      // }
+      // if(!flag){
+      //       res.status(200).json({done: false, result: result, groupId:group.id}) ;
+      // }
+      res.status(200).json({message: "conformation updated!"}) ;
       //confirmed by all
       //next step -> skill and edges deletion
       //Task1: delete the edges using group
 
       //Task2: delete user under skills sections
 
+      // res.status(200).json({done: true, result: result}) ;
+
+}) ;
+
+// 4. conformation check with backtracking
+// METHOD- GET
+// API- http://localhost:5000/api/matchingAlgo/user/group/:id
+const group = asyncHandler( async(req, res)=>{
+      const userId = req.params.id ;
+      const user = await User.findById(userId) ;
+      let result = [] ;
+      let flag = true ;
+      for(let i=0;i<user.groups.length; ++i){
+            const groupId = user.groups[i].id ;
+            const group = await Group.findById(groupId) ;
+            // console.log(group);
+            let temp = [] ;
+            for(let j =0;j<group.allIds.length; ++j){
+                  const fl = group.allIds[j].confirmation ;
+                  const id = group.allIds[j].id ;
+                  const groupUser = await User.findById(id) ;
+                  // console.log(groupUser);
+                  if(groupUser){
+                        flag = flag & fl ;
+                        temp.push({name:  groupUser.name, checked: fl}) ;
+                  }
+            }
+            result.push(temp) ;
+      }
+      console.log(result);
       res.status(200).json({done: true, result: result}) ;
 
 }) ;
-// const group = asyncHandler( async(req, res)=>{
-//       const userId = req.params.id ;
-//       const user = await User.findById(userId) ;
-//       for(let i=0;i<user.groups.length; ++i){
-//             const groupId = user.groups[i].id ;
-//             const group = await Group.findById(groupId) ;
-//             for(let j =0;j<group.allIds.length; ++j){
-//                   const fl = group.allIds[j].confirmation ;
-//                   const id = group.allIds[j].id ;
-//                   const groupUser = await User.findById(id) ;
-//                   if(groupUser){
 
-//                   }
-//             }
-//       }
-// }) ;
-
-module.exports = {matching, graphMatchingAlgo, confirmation} ;
+module.exports = {matching, graphMatchingAlgo, confirmation, group} ;

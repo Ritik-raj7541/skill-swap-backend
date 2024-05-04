@@ -31,6 +31,9 @@ const userSchema = mongoose.Schema({
                         id: String,
                   }
             ],
+      },
+      time : {
+            type: Date,
       }
 }) ;
 module.exports = mongoose.model("UserSchema", userSchema) ;

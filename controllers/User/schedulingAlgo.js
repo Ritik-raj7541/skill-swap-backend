@@ -1,137 +1,51 @@
-const registeringTimes = [
-      { userId: "user3", time: "2024-05-04T08:45:00Z" }, // User 3 registration time
-      { userId: "user2", time: "2024-05-03T08:20:00Z" }, // User 2 registration time
-      { userId: "user4", time: "2024-05-05T09:30:00Z" }, // User 4 registration time
-      { userId: "user1", time: "2024-05-02T08:00:00Z" }  // User 1 registration time
-  ];
+const asyncHandler = require('express-async-handler') ;
+const User = require('../../models/user') ;
+const Group = require('../../models/studyGroup') ;
+const Graph = require('../../models/graph') ;
+const Scheduler = require('../../models/schedule') ;
+const schedulingAlgo = require('../../middleware/primeScheduler');
+
+const scheduler = asyncHandler( async(req, res) =>{
+  const schedule = req.body ;
+  const userId = req.body.id ;
+  // const groupId = req.params.groupID ;
+  const user = await User.findById(userId) ;
+  const groupId = user.group[0].id ;
+  const newUserSchedule = await Scheduler.findOne({id: userId, groupId: groupId}) ;
+  if(newUserSchedule){
+    res.status(208).json({message: "already given the schedule wait for others !!"}) ;
+  }
+  const newSchedule = await Scheduler.create({
+    userId: userId,
+    groupId: groupId,
+    schedule: schedule,
+  }) ;
+  if(!newSchedule){
+    res.status(400)
+    throw new Error("schedule not formed !!") ;
+  }
+  const groupSchedule = await Scheduler.find({groupId: groupId}) ;
+  const group = await Group.findById(groupId) ;
+  if(groupSchedule.length < group.allIds.length){
+    res.status(208).json({message: "your schedule added kindly wait for others !!"}) ;
+  }
+  let registeringTimes = [] ;
+  let links = [] ;
+  let userSchedules = []
+  for(let i=0;i<groupSchedule.length; ++i){
+    userSchedules.push(schedule) ;
+  }
   
-  registeringTimes.sort((a, b) => {
-      return new Date(a.time) - new Date(b.time);
-  });
-  
-  
-  const links = [
-      { teacher: "user1", student: "user2", skill: "JavaScript", time: "2024-05-04T09:00:00Z" }, // User 1 teaches User 2
-      { teacher: "user3", student: "user4", skill: "Python", time: "2024-05-02T10:30:00Z" },   // User 3 teaches User 4
-      { teacher: "user2", student: "user3", skill: "Java", time: "2024-05-04T09:00:00Z" },     // User 2 teaches User 3
-      { teacher: "user4", student: "user1", skill: "C++", time: "2024-05-03T13:15:00Z" }       // User 4 teaches User 1
-  ];
-  
-  const schedules = [
-      {
-        teacher: "user1",
-        student: "user2",
-        teacherSchedule: [
-          { day: "Monday", timeSlots: [true, false, true, true, false, true, false, true, false, false, true, false, true, true, true, true, false, false, true, false, true, false, true, false] }, // Example availability for Monday
-          { day: "Tuesday", timeSlots: [true, true, true, true, true, true, false, true, false, true, false, true, false, true, true, false, true, false, true, true, true, false, true, true] }, // Example availability for Tuesday
-          { day: "Wednesday", timeSlots: [false, true, false, true, true, true, true, true, false, true, false, false, true, true, true, false, true, false, true, true, false, true, true, false] }, // Example availability for Wednesday
-          { day: "Thursday", timeSlots: [true, true, true, false, false, true, false, true, true, false, true, false, true, false, false, true, true, true, false, false, true, false, false, true] }, // Example availability for Thursday
-          { day: "Friday", timeSlots: [false, false, true, false, true, false, true, false, true, false, true, false, true, false, false, true, false, true, false, true, false, true, false, true] }, // Example availability for Friday
-          { day: "Saturday", timeSlots: [false, true, false, true, true, false, false, true, false, true, false, true, false, true, true, false, true, false, true, false, true, false, true, false] }, // Example availability for Saturday
-          { day: "Sunday", timeSlots: [true, false, true, false, true, true, false, true, false, true, false, true, false, true, true, false, true, false, true, false, true, false, true, false] } // Example availability for Sunday      
-      ],
-        studentSchedule: [
-          { day: "Monday", timeSlots: [true, true, false, true, true, false, true, true, true, false, true, false, false, true, true, false, true, false, true, true, false, true, true, false] }, // Example availability for Monday
-          { day: "Tuesday", timeSlots: [true, true, true, true, false, true, false, true, false, true, false, true, false, true, true, false, true, false, true, true, true, true, false, true] }, // Example availability for Tuesday
-          { day: "Wednesday", timeSlots: [false, false, true, false, true, false, true, false, true, false, true, false, true, false, false, true, false, true, false, true, false, true, false, true] }, // Example availability for Wednesday
-          { day: "Thursday", timeSlots: [true, true, false, true, true, false, true, true, true, false, true, false, false, true, true, false, true, false, true, true, false, true, true, false] }, // Example availability for Thursday
-          { day: "Friday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, false, true, false, true, false, true, false, true, false, true] }, // Example availability for Friday
-          { day: "Saturday", timeSlots: [false, true, false, true, false, true, false, true, false, true, false, true, false, true, true, false, true, false, true, false, true, false, true, false] }, // Example availability for Saturday
-          { day: "Sunday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, false, true, false, true, false, true, false, true, false, true] } // Example availability for Sunday
-      ]
-      },
-      {
-        teacher: "user3",
-        student: "user4",
-        teacherSchedule: [
-          { day: "Monday", timeSlots: [false, true, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-          { day: "Tuesday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-          { day: "Wednesday", timeSlots: [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true] },
-          { day: "Thursday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-          { day: "Friday", timeSlots: [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true] },
-          { day: "Saturday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-          { day: "Sunday", timeSlots: [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true] }
-        ],
-        studentSchedule: [
-          { day: "Monday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-          { day: "Tuesday", timeSlots: [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true] },
-          { day: "Wednesday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-          { day: "Thursday", timeSlots: [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true] },
-          { day: "Friday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-          { day: "Saturday", timeSlots: [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true] },
-          { day: "Sunday", timeSlots: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] }
-        ]
-      },
-      {
-        teacher: "user4",
-        student: "user1",
-        teacherSchedule: [
-          { day: "Monday", timeSlots: [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false] },
-          { day: "Tuesday", timeSlots: [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true] },
-          { day: "Wednesday", timeSlots: [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false] },
-          { day: "Thursday", timeSlots: [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true] },
-          { day: "Friday", timeSlots: [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false] },
-          { day: "Saturday", timeSlots: [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true] },
-          { day: "Sunday", timeSlots: [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false] }
-        ],
-        studentSchedule: [
-          { day: "Monday", timeSlots: [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true] },
-          { day: "Tuesday", timeSlots: [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false] },
-          { day: "Wednesday", timeSlots: [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true] },
-          { day: "Thursday", timeSlots: [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false] },
-          { day: "Friday", timeSlots: [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true] },
-          { day: "Saturday", timeSlots: [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false] },
-          { day: "Sunday", timeSlots: [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true] }
-        ]
-      },
-      {
-        teacher: "user2",
-        student: "user3",
-        teacherSchedule: [
-          { day: "Monday", timeSlots: [false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true] },
-          { day: "Tuesday", timeSlots: [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false] },
-          { day: "Wednesday", timeSlots: [false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true] },
-          { day: "Thursday", timeSlots: [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false] },
-          { day: "Friday", timeSlots: [false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true] },
-          { day: "Saturday", timeSlots: [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false] },
-          { day: "Sunday", timeSlots: [false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true] }
-        ],
-        studentSchedule: [
-          { day: "Monday", timeSlots: [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false] },
-          { day: "Tuesday", timeSlots: [false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true] },
-          { day: "Wednesday", timeSlots: [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false] },
-          { day: "Thursday", timeSlots: [false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true] },
-          { day: "Friday", timeSlots: [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false] },
-          { day: "Saturday", timeSlots: [false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true] },
-          { day: "Sunday", timeSlots: [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false] }
-        ]
-      },
-      // Add schedules for the remaining links...
-  ];
-  
-  // console.log(schedules);
-  
-  
-  // Sort the links array based on time and registering times
-  links.sort((a, b) => {
-  // Compare link times
-      const timeComparison = new Date(a.time) - new Date(b.time);
-      if (timeComparison !== 0) {
-          return timeComparison;
-      } else {
-          // If link times are equal, compare registering times of the users
-          const user1RegisteringTime = registeringTimes.find(user => user.userId === a.teacher).time;
-          const user2RegisteringTime = registeringTimes.find(user => user.userId === b.teacher).time;
-          return new Date(user1RegisteringTime) - new Date(user2RegisteringTime);
-      }
-  });
-  
-  // console.log(links);
-    
-  
-  links.forEach(link => {
-      const { teacherSchedule , studentSchedule } = schedules.find(user => user.student === link.student && user.teacher === link.teacher);
-      link.intersectedSchedule = teacherSchedule.map((daySchedule , index_i) => daySchedule.timeSlots.map((isFree , index_j) => isFree && studentSchedule[index_i].timeSlots[index_j] ))
-  });
-  
-  console.log(links);
+  for(let i=0;i<group.allIds.length; ++i){
+    const pair = group.allIds[i] ;
+    const edge = await Graph.find({teacher: pair.id, student: pair.linkedId}) ;
+    const user1 = await User.findById(pair.id) ;
+    const user2 = await User.findById(pair.linkedId) ;
+    links.push({teacher: user1.name, student: user2.name, skill: edge.skill, time: edge.linkTime}) ;
+    registeringTimes.push({userId: user1.name, time: user1.time}) ;
+  }
+  const result = await schedulingAlgo(registeringTimes , links , userSchedules) ;
+  res.status(200).json({groupId: groupId, schedules: result}) ;
+}) ;
+
+module.exports = scheduler ;

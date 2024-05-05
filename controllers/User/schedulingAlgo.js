@@ -50,15 +50,16 @@ const scheduler = asyncHandler(async (req, res) => {
     let links = [];
     let userSchedules = [];
     for (let i = 0; i < groupSchedule.length; ++i) {
-      userSchedules.push(schedule);
+      userSchedules.push(groupSchedule[i].schedule);
     }
 
     for (let i = 0; i < group.allIds.length; ++i) {
       const pair = group.allIds[i];
-      const edge = await Graph.find({
+      const edge = await Graph.findOne({
         teacher: pair.id,
         student: pair.linkedId,
       });
+      // console.log(edge);
       const user1 = await User.findById(pair.id);
       const user2 = await User.findById(pair.linkedId);
       links.push({
@@ -71,6 +72,7 @@ const scheduler = asyncHandler(async (req, res) => {
     }
     const result = await schedulingAlgo(registeringTimes, links, userSchedules);
     //add schedule in students schema and send message
+    console.log(result);
     const userSchedule = await Schedule.create({
       userId: userId,
       schedule: result,
@@ -79,8 +81,6 @@ const scheduler = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error("some error occur");
     }
-  
-
   res.status(200).json({ message: "Final Schedule added in you schedule bar" });
 });
 

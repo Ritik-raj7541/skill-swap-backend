@@ -1,7 +1,8 @@
 const asyncHandler = require('express-async-handler') ;
 
 const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedules ) =>{
-  // console.log(userSchedules);
+  // // console.log(userSchedules);
+  // // console.log(links);
       registeringTimes.sort((a, b) => {
             return new Date(a.time) - new Date(b.time);
           });
@@ -24,9 +25,14 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
           let intersectedLinks = links.map((link) => {
         
             const teacher = userSchedules.find(userSchedule => userSchedule.user === link.teacher);
-            const student = userSchedules.find(userSchedule => userSchedule.user === link.student);
-            // console.log(link);
-            const intersectionSchedule = teacher.schedule.map((daySchedule , index_i) => daySchedule.map((isFree , index_j) => isFree && student.schedule[index_i].timeSlots[index_j] ));
+            const student = userSchedules.find(userSchedule => {
+              // if(userSchedule.user === link.student){
+                // // console.log(",manav" , userSchedule.user , link.student);
+              // }
+              return userSchedule.user === link.student
+            });
+            // // console.log("ritik ",student);
+            const intersectionSchedule = teacher.schedule.map((daySchedule , index_i) => daySchedule.map((isFree , index_j) => isFree && student.schedule[index_i][index_j] ));
             const timePerWeek = parseInt((parseInt(teacher.teachTime) + parseInt(student.learnTime))/2);
             
             return{
@@ -69,7 +75,7 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
               return [...result , intersectionObj]
           } , []);
         
-          // console.log(userIntersections);
+          // // console.log(userIntersections);
         
         
           // {
@@ -96,7 +102,7 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
               return available;
             }));
         
-            // console.log( union[0] );
+            // // console.log( union[0] );
             const {teacher , student} = link;
         
             const tAvail = userIntersections.find(user => user.user === teacher).totalAvailable;
@@ -125,13 +131,16 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
             return intersectionObj;
           })
         
-          // console.log(uniqueLinkSchedules);
+          // // console.log(uniqueLinkSchedules);
         
         
           // Initialize a 7x24 matrix with empty arrays in each cell
           // This array is initialized to store the answer
           let scheduleMatrix = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => []));
           let weeklyRemainingClass = [];
+
+          // // console.log(userIntersections);
+          
         
           for( let item=0 ; item<uniqueLinkSchedules.length ; item++ ) {
             
@@ -139,12 +148,18 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
             let scheduleHours = uniqueLinkSchedules[item].timePerWeek;
             let remainingSlots = uniqueLinkSchedules[item].totalAvailable;
             
-            // console.log(scheduleHours , remainingSlots);
-        
+            // // console.log(scheduleHours , remainingSlots);
+            // 11111111111111111111111111111
+            // if(item == 0){
+            //   userIntersections.forEach(uI => {
+            //     // console.log("baij->111" , uI.user , uI.userIntersect);
+            //   });
+            // }
+
             let i=0, j=0;
             while(i<linkSchedule.length && j<linkSchedule[0].length && scheduleHours > 0 && remainingSlots >= 0){
               if(linkSchedule[i][j]){
-                // console.log('yes');
+                // // console.log('yes');
                 scheduleMatrix[i][j] = [...scheduleMatrix[i][j] , {
                   teacher: uniqueLinkSchedules[item].teacher,
                   student: uniqueLinkSchedules[item].student,
@@ -163,10 +178,29 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
                 j+=1;
               }
             }
-        
+            // 222222222222222222222222222222222
+            // if(item == 0){
+            //   userIntersections.forEach(uI => {
+            //     // console.log("baij->222" , uI.user , uI.userIntersect);
+            //   });
+            // }
+
             if(scheduleHours > 0){
-              let {userIntersect , totalAvailable} = userIntersections.find(user => user.user === uniqueLinkSchedules[item].primaryUser).userIntersect;
-              // console.log(primaryUserIntersection);
+              // userIntersections.forEach(uI => {
+              //   // console.log("baij" , uI.user , uI.userIntersect);
+              // });
+              const finding = userIntersections.find(user => {
+                if(user.user === uniqueLinkSchedules[item].primaryUser && item===0){
+                  // // console.log("manav" , user.user);
+
+                }
+                return user.user === uniqueLinkSchedules[item].primaryUser
+              });
+              // // console.log("ritik" , finding);
+              // let {userIntersect , totalAvailable} = finding;
+              // // console.log(primaryUserIntersection);
+              let {userIntersect , totalAvailable} = userIntersections.find(user => user.user === uniqueLinkSchedules[item].secondaryUser);
+              
               let ip=0 , jp=0;
               while(i<linkSchedule.length && j<linkSchedule[0].length && scheduleHours > 0 && totalAvailable >= 0){
                 if(userIntersect[i][j]){
@@ -190,10 +224,26 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
               userIntersections.find(user => user.user === uniqueLinkSchedules[item].primaryUser).userIntersect = userIntersect;
               userIntersections.find(user => user.user === uniqueLinkSchedules[item].primaryUser).totalAvailable = totalAvailable;
             }
-        
+            // 3333333333333333333333
+            // if(item == 0){
+            //   userIntersections.forEach(uI => {
+            //     // // console.log("baij->333" , uI.user , uI.userIntersect?'yes':'no');
+            //   });
+            // }
+
+
             if(scheduleHours > 0){
-              let {userIntersect , totalAvailable} = userIntersections.find(user => user.user === uniqueLinkSchedules[item].secondaryUser).userIntersect;
-              // console.log(primaryUserIntersection);
+              // const finding = userIntersections.find(user => {
+              //   if(user.user === uniqueLinkSchedules[item].secondaryUser && item===0){
+              //     // console.log("manav" , user.user);
+
+              //   }
+              //   return user.user === uniqueLinkSchedules[item].secondaryUser
+              // });
+              // if(item===0)// console.log("ritik" , finding);
+              // let {userIntersect , totalAvailable} = finding;
+              let {userIntersect , totalAvailable} = userIntersections.find(user => user.user === uniqueLinkSchedules[item].secondaryUser);
+              // // console.log(primaryUserIntersection);
               let ip=0 , jp=0;
               while(i<linkSchedule.length && j<linkSchedule[0].length && scheduleHours > 0 && totalAvailable >= 0){
                 if(userIntersect[i][j]){
@@ -214,6 +264,16 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
                   j+=1;
                 }
               }
+
+              // let tempUserInter = userIntersections.reduce((result , user)=>{
+              //   if(user.user === finding.user){
+              //     return [...result , finding];
+              //   } else {
+              //     return [...result , user];
+              //   }
+              // } , [])
+
+              // userIntersections = tempUserInter;
               userIntersections.find(user => user.user === uniqueLinkSchedules[item].secondaryUser).userIntersect = userIntersect;
               userIntersections.find(user => user.user === uniqueLinkSchedules[item].secondaryUser).totalAvailable = totalAvailable;
             }
@@ -225,9 +285,17 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
               skill: uniqueLinkSchedules[item].skill,
               remainingHoursToSchedule: scheduleHours
             }]
+
+            // 4444444444444444444444
+            // if(item == 0){
+            //   userIntersections.forEach(uI => {
+            //     // // console.log("baij->444" , uI.user , uI.userIntersect?'yes':'no');
+            //   });
+            // }
+
           }
         
-          // console.log(scheduleMatrix , weeklyRemainingClass);
+          // // console.log(scheduleMatrix , weeklyRemainingClass);
         
           return {
             weeklyRemainingClass, 

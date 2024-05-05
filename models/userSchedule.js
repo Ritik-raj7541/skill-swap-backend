@@ -1,7 +1,7 @@
 const mongoose = require('mongoose') ;
 
 const userScheduleSchema = mongoose.Schema({
-      userId: {
+      groupId: {
             type: String,
       },
       schedule: {

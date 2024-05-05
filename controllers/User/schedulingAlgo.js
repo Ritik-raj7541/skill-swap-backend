@@ -74,7 +74,7 @@ const scheduler = asyncHandler(async (req, res) => {
     //add schedule in students schema and send message
     console.log(result);
     const userSchedule = await Schedule.create({
-      userId: userId,
+      groupId: groupId,
       schedule: result,
     });
     if (!userSchedule) {
@@ -89,7 +89,10 @@ const scheduler = asyncHandler(async (req, res) => {
 //API- http://localhost:5000/api/schedulingAlgo/user/show-schedule/:id
 const getSchedule = asyncHandler(async (req, res) => {
   const userId = req.params.id;
-  const schedule = await Schedule.findOne({ userId: userId });
+  const user = await User.findById(userId) ;
+  const groupId = user.groups[0].id ;
+  console.log(groupId);
+  const schedule = await Schedule.findOne({groupId: groupId });
   if (!schedule) {
     res.status(400);
     throw new Error("Currently you have no schedule!!");

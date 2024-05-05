@@ -14,6 +14,7 @@ const profile = asyncHandler(async (req, res) => {
   //   res.status(400);
   //   throw new Error("Phone Number is mandatory mandatory!");
   // }
+  console.log(req.body);
   const id = req.params.id;
   const existUser = await User.findById(id);
   if (!existUser) {

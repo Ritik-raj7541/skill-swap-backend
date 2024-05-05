@@ -98,6 +98,7 @@ const matching = asyncHandler( async(req, res)=>{
 const graphMatchingAlgo = asyncHandler( async(req, res) =>{
       const id = req.params.id ;
       const allCycle = await dfsWhichGivesCycle(id) ;
+      console.log(allCycle);
       const result = [] ;
       for(let i=0;i<allCycle.length; ++i){
             const group = allCycle[i] ;
@@ -120,11 +121,10 @@ const graphMatchingAlgo = asyncHandler( async(req, res) =>{
                         allIds: ids
                   }) ;
                   result.push({id: newGroup.id, group: names}) ;
+            }else{
+                  result.push({id: existGroup.id, group: names}) ;
             }
-            else{
-
-            }
-            result.push({id: existGroup.id, group: names}) ;
+            
       }
       res.status(200).json(result) ;
 }) ;
@@ -148,42 +148,32 @@ const confirmation = asyncHandler( async(req, res) =>{
             ) ;
             if(!updatedUser){
                   res.status(400) ;
-                  throw new Error ;
+                  throw new Error("User not updated") ;
             }
       }
-      const group = await Group.findOneAndUpdate(
-            { _id: groupId, "allIds.id": userId },
-            { $set: { "allIds.$.confirmation": true } },
-            { new: true }
-      );
-      if(!group){
-            res.status(400) ;
-            throw new Error("updation not done wrong") ;
-      }
-      //check for all
-      // let flag = true ;
-      // let result = [] ;
-      // for(let i=0;i<group.allIds.length; ++i){
-      //       const fl = group.allIds[i].confirmation ;
-      //       flag = flag & fl ;
-      //       const id = group.allIds[i].id ;
-      //       const user = await User.findById(id) ;
-      //       if(user){
-      //             result.push({name: user.name, checked: fl}) ;
-      //       }
+            const group = await Group.findOneAndUpdate(
+                  { _id: groupId, "allIds.id": userId },
+                  { $set: { "allIds.$.confirmation": true } },
+                  { new: true }
+            );
+            console.log(group);
+            if(!group){
+                  res.status(400) ;
+                  throw new Error("updation not done wrong") ;
+            }
 
-      // }
-      // if(!flag){
-      //       res.status(200).json({done: false, result: result, groupId:group.id}) ;
-      // }
+      
       res.status(200).json({message: "conformation updated!"}) ;
+
+
+
       //confirmed by all
       //next step -> skill and edges deletion
       //Task1: delete the edges using group
 
       //Task2: delete user under skills sections
 
-      // res.status(200).json({done: true, result: result}) ;
+      
 
 }) ;
 

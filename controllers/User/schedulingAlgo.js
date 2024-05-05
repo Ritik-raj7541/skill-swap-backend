@@ -1,51 +1,100 @@
-const asyncHandler = require('express-async-handler') ;
-const User = require('../../models/user') ;
-const Group = require('../../models/studyGroup') ;
-const Graph = require('../../models/graph') ;
-const Scheduler = require('../../models/schedule') ;
-const schedulingAlgo = require('../../middleware/primeScheduler');
+const asyncHandler = require("express-async-handler");
+const User = require("../../models/user");
+const Group = require("../../models/studyGroup");
+const Graph = require("../../models/graph");
+const Scheduler = require("../../models/schedule");
+const { schedulingAlgo } = require("../../middleware/primeScheduler");
+const Schedule = require("../../models/userSchedule");
 
-const scheduler = asyncHandler( async(req, res) =>{
-  const schedule = req.body ;
-  const userId = req.body.id ;
+//1. Add schedule
+//METHOD - POST
+//API- http://localhost:5000/api/schedulingAlgo/user/schedule/:id
+const scheduler = asyncHandler(async (req, res) => {
+  const schedule = req.body;
+  const userId = req.params.id;
+  // console.log(schedule);
   // const groupId = req.params.groupID ;
-  const user = await User.findById(userId) ;
-  const groupId = user.group[0].id ;
-  const newUserSchedule = await Scheduler.findOne({id: userId, groupId: groupId}) ;
-  if(newUserSchedule){
-    res.status(208).json({message: "already given the schedule wait for others !!"}) ;
+  const user = await User.findById(userId);
+  // console.log(user.group);
+  const groupId = user.groups[0].id;
+  // console.log(groupId);
+  const newUserSchedule = await Scheduler.findOne({
+    groupId: groupId,
+    userId: userId,
+  });
+  // console.log(newUserSchedule);
+  if (newUserSchedule) {
+    res.status(400) ;
+    throw new Error("Already added") ;
+      
   }
   const newSchedule = await Scheduler.create({
     userId: userId,
     groupId: groupId,
     schedule: schedule,
-  }) ;
-  if(!newSchedule){
-    res.status(400)
-    throw new Error("schedule not formed !!") ;
+  });
+  if (!newSchedule) {
+    res.status(400);
+    throw new Error("schedule not formed !!");
   }
-  const groupSchedule = await Scheduler.find({groupId: groupId}) ;
-  const group = await Group.findById(groupId) ;
-  if(groupSchedule.length < group.allIds.length){
-    res.status(208).json({message: "your schedule added kindly wait for others !!"}) ;
-  }
-  let registeringTimes = [] ;
-  let links = [] ;
-  let userSchedules = []
-  for(let i=0;i<groupSchedule.length; ++i){
-    userSchedules.push(schedule) ;
-  }
-  
-  for(let i=0;i<group.allIds.length; ++i){
-    const pair = group.allIds[i] ;
-    const edge = await Graph.find({teacher: pair.id, student: pair.linkedId}) ;
-    const user1 = await User.findById(pair.id) ;
-    const user2 = await User.findById(pair.linkedId) ;
-    links.push({teacher: user1.name, student: user2.name, skill: edge.skill, time: edge.linkTime}) ;
-    registeringTimes.push({userId: user1.name, time: user1.time}) ;
-  }
-  const result = await schedulingAlgo(registeringTimes , links , userSchedules) ;
-  res.status(200).json({groupId: groupId, schedules: result}) ;
-}) ;
+  const groupSchedule = await Scheduler.find({ groupId: groupId });
+  const group = await Group.findById(groupId);
+  console.log(typeof groupSchedule.length, typeof group.allIds.length);
+  if (groupSchedule.length < group.allIds.length) {
+    console.log("ritik");
+    res
+      .status(400)
+      throw new Error("Not filled by all!!") ;
+  } 
+    let registeringTimes = [];
+    let links = [];
+    let userSchedules = [];
+    for (let i = 0; i < groupSchedule.length; ++i) {
+      userSchedules.push(schedule);
+    }
 
-module.exports = scheduler ;
+    for (let i = 0; i < group.allIds.length; ++i) {
+      const pair = group.allIds[i];
+      const edge = await Graph.find({
+        teacher: pair.id,
+        student: pair.linkedId,
+      });
+      const user1 = await User.findById(pair.id);
+      const user2 = await User.findById(pair.linkedId);
+      links.push({
+        teacher: user1.id,
+        student: user2.id,
+        skill: edge.skill,
+        time: edge.linkTime,
+      });
+      registeringTimes.push({ userId: user1.id, time: user1.time });
+    }
+    const result = await schedulingAlgo(registeringTimes, links, userSchedules);
+    //add schedule in students schema and send message
+    const userSchedule = await Schedule.create({
+      userId: userId,
+      schedule: result,
+    });
+    if (!userSchedule) {
+      res.status(400);
+      throw new Error("some error occur");
+    }
+  
+
+  res.status(200).json({ message: "Final Schedule added in you schedule bar" });
+});
+
+//2. Get schedule
+//METHOD - GET
+//API- http://localhost:5000/api/schedulingAlgo/user/show-schedule/:id
+const getSchedule = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+  const schedule = await Schedule.findOne({ userId: userId });
+  if (!schedule) {
+    res.status(400);
+    throw new Error("Currently you have no schedule!!");
+  }
+  res.status(200).json(schedule.schedule);
+});
+
+module.exports = { scheduler, getSchedule };

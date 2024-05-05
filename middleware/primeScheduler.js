@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler') ;
 
-const schedulingAlgo = asyncHandler( async(registeringTimes , links , userSchedules)=>{
+const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedules ) =>{
+  // console.log(userSchedules);
       registeringTimes.sort((a, b) => {
             return new Date(a.time) - new Date(b.time);
           });
@@ -24,8 +25,8 @@ const schedulingAlgo = asyncHandler( async(registeringTimes , links , userSchedu
         
             const teacher = userSchedules.find(userSchedule => userSchedule.user === link.teacher);
             const student = userSchedules.find(userSchedule => userSchedule.user === link.student);
-        
-            const intersectionSchedule = teacher.schedule.map((daySchedule , index_i) => daySchedule.timeSlots.map((isFree , index_j) => isFree && student.schedule[index_i].timeSlots[index_j] ));
+            // console.log(link);
+            const intersectionSchedule = teacher.schedule.map((daySchedule , index_i) => daySchedule.map((isFree , index_j) => isFree && student.schedule[index_i].timeSlots[index_j] ));
             const timePerWeek = parseInt((parseInt(teacher.teachTime) + parseInt(student.learnTime))/2);
             
             return{
@@ -235,4 +236,4 @@ const schedulingAlgo = asyncHandler( async(registeringTimes , links , userSchedu
         
         
 }) ;
-module.exports = schedulingAlgo ;
+module.exports = {schedulingAlgo} ;

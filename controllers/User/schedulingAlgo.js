@@ -65,6 +65,8 @@ const scheduler = asyncHandler(async (req, res) => {
       links.push({
         teacher: user1.id,
         student: user2.id,
+        teacherName: user1.name,
+        studentName: user2.name,
         skill: edge.skill,
         time: edge.linkTime,
       });

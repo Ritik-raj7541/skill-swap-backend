@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler') ;
 
 const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedules ) =>{
   // // console.log(userSchedules);
-  // // console.log(links);
+  // console.log(links);
       registeringTimes.sort((a, b) => {
             return new Date(a.time) - new Date(b.time);
           });
@@ -42,7 +42,7 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
             }
           });
         
-        
+        // console.log(intersectedLinks);
           // [
           //   {
           //     user: userid,
@@ -120,6 +120,8 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
             const intersectionObj = {
               intersectionArray: onlyLinkSchedule,
               timePerWeek: link.timePerWeek,
+              teacherName: link.teacherName,
+              studentName: link.studentName,
               teacher: link.teacher,
               student: link.student,
               skill: link.skill,
@@ -131,7 +133,7 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
             return intersectionObj;
           })
         
-          // // console.log(uniqueLinkSchedules);
+          console.log("check 2 ",uniqueLinkSchedules);
         
         
           // Initialize a 7x24 matrix with empty arrays in each cell
@@ -161,6 +163,8 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
               if(linkSchedule[i][j]){
                 // // console.log('yes');
                 scheduleMatrix[i][j] = [...scheduleMatrix[i][j] , {
+                  teacherName: uniqueLinkSchedules[item].teacherName,
+                  studentName: uniqueLinkSchedules[item].studentName,
                   teacher: uniqueLinkSchedules[item].teacher,
                   student: uniqueLinkSchedules[item].student,
                   skill: uniqueLinkSchedules[item].skill,
@@ -205,6 +209,8 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
               while(i<linkSchedule.length && j<linkSchedule[0].length && scheduleHours > 0 && totalAvailable >= 0){
                 if(userIntersect[i][j]){
                   scheduleMatrix[i][j] = [...scheduleMatrix[i][j] , {
+                    teacherName: uniqueLinkSchedules[item].teacherName,
+                    studentName: uniqueLinkSchedules[item].studentName,
                     teacher: uniqueLinkSchedules[item].teacher,
                     student: uniqueLinkSchedules[item].student,
                     skill: uniqueLinkSchedules[item].skill,
@@ -248,6 +254,8 @@ const schedulingAlgo = asyncHandler( async(registeringTimes, links, userSchedule
               while(i<linkSchedule.length && j<linkSchedule[0].length && scheduleHours > 0 && totalAvailable >= 0){
                 if(userIntersect[i][j]){
                   scheduleMatrix[i][j] = [...scheduleMatrix[i][j] , {
+                    teacherName: uniqueLinkSchedules[item].teacherName,
+                    studentName: uniqueLinkSchedules[item].studentName,
                     teacher: uniqueLinkSchedules[item].teacher,
                     student: uniqueLinkSchedules[item].student,
                     skill: uniqueLinkSchedules[item].skill,
